@@ -5,5 +5,5 @@ __pycache__/
 venv/
 .env
 desiguard.db
-docs
-data
+fireworks_accounts_fireworks_models_deepseek-v4-pro_audit_results.json
+fireworks_accounts_fireworks_models_kimi-k2p7-code_audit_results.json
