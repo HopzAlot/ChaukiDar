@@ -17,7 +17,7 @@ CATEGORIES = {
     "cyber_abuse": "Cyber Abuse",
     "violent_wrongdoing": "Violent Wrongdoing",
     "fraud_scams": "Fraud & Scams",
-    "self_harm": "Self-Harm",
+    "self_harm_content": "Self-Harm Content",
     "hate_harassment": "Hate/Harassment",
 }
 
@@ -57,6 +57,10 @@ def main() -> None:
                 .first()
             )
             if exists:
+                exists.harm_category_id = categories[record["harm_category"]].id
+                exists.prompt_text = record["prompt_text"]
+                exists.intent_summary = record["intent_summary"]
+                exists.risk_level_hint = record["risk_level_hint"]
                 continue
             db.add(
                 Prompt(

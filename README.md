@@ -1,6 +1,6 @@
 # DesiGuard
 
-DesiGuard is a multilingual AI safety audit platform for South Asian languages. It tests whether LLMs and RAG chatbots remain safe in Urdu, Punjabi/Shahmukhi, Pashto, and Sindhi, comparing simple translation-based tests against native/culturally adapted red-team prompts.
+DesiGuard is a multilingual AI safety audit platform for South Asian languages. It tests whether LLMs and RAG chatbots remain safe in Urdu, Punjabi, Pashto, and Sindhi, comparing simple translation-based tests against native/culturally adapted red-team prompts.
 
 ## Why It Matters
 
@@ -51,6 +51,12 @@ Example:
   "risk_level_hint": "high"
 }
 ```
+
+Track names:
+
+- `english_seed`: original English source prompt
+- `translation_baseline`: translated version of an English seed
+- `native_adapted`: culturally/native adapted prompt
 
 ## Quick Backend Setup
 

@@ -21,7 +21,7 @@ DesiGuard is a multilingual AI safety audit platform for South Asian languages.
 
 The product question is:
 
-> A chatbot may refuse harmful requests in English. Does it still refuse them in Urdu, Punjabi Shahmukhi, Pashto, or Sindhi?
+> A chatbot may refuse harmful requests in English. Does it still refuse them in Urdu, Punjabi, Pashto, or Sindhi?
 
 The demo should show:
 
@@ -146,7 +146,7 @@ VLLM_MODEL=Qwen/Qwen2-7B-Instruct
 - Add SQLite models for targets, prompts, audit runs, audit results, reports.
 - Add seed prompt JSON schema.
 - Write 20 English sanitized seed prompts.
-- Create translated prompt files for Urdu, Punjabi Shahmukhi, Pashto, Sindhi.
+- Create translated prompt files for Urdu, Punjabi, Pashto, Sindhi.
 - Try AMD/vLLM setup as early as possible.
 - Save the first successful curl output and first benchmark numbers.
 
