@@ -1,5 +1,4 @@
 import Link from 'next/link';
-import { ShieldCheck } from 'lucide-react';
 
 export default function Navbar() {
   return (
@@ -11,10 +10,11 @@ export default function Navbar() {
             className="relative flex h-7 w-7 items-center justify-center overflow-hidden rounded-md border border-brand/20 bg-brand text-white shadow-sm"
             aria-hidden="true"
           >
-            <ShieldCheck size={17} strokeWidth={2.5} />
-            <span className="absolute left-1.5 top-1 h-1.5 w-1.5 rounded-full bg-white/90" />
-            <span className="absolute right-1.5 top-1 h-1.5 w-1.5 rounded-full bg-white/90" />
-            <span className="absolute bottom-1.5 h-1 w-3 rounded-full bg-white/80" />
+            <span className="absolute left-1/2 top-1 h-2.5 w-5 -translate-x-1/2 rounded-[50%] bg-[#D8C891] shadow-[inset_0_-2px_0_rgba(74,60,34,0.35)]" />
+            <span className="absolute top-3 h-3.5 w-5 rounded-full bg-[#D99258]" />
+            <span className="absolute left-[7px] top-[15px] h-1 w-1 rounded-full bg-[#21140F]" />
+            <span className="absolute right-[7px] top-[15px] h-1 w-1 rounded-full bg-[#21140F]" />
+            <span className="absolute left-1/2 top-[18px] h-1.5 w-5 -translate-x-1/2 rounded-full bg-[#244C43]" />
           </span>
           <span className="font-display text-[15px] font-bold tracking-tight text-ink">
             Chaukidar

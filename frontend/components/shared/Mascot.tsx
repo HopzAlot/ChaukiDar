@@ -297,8 +297,8 @@ export default function Mascot() {
             >
               <defs>
                 <linearGradient id="mascotBody" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0" stopColor="#8E9CEC" />
-                  <stop offset="1" stopColor="#5C6DCB" />
+                  <stop offset="0" stopColor="#C9B879" />
+                  <stop offset="1" stopColor="#8E7D45" />
                 </linearGradient>
                 <linearGradient id="whistleMetal" x1="0" y1="0" x2="1" y2="1">
                   <stop offset="0" stopColor="#F7F9FC" />
@@ -340,37 +340,48 @@ export default function Mascot() {
               {/* shadow */}
               <ellipse cx="68" cy="179" rx="26" ry="5.5" fill="#14151B" opacity="0.1" />
 
-              {/* fluff tufts, behind the main body so they peek out at the edges */}
-              <g fill="#7482D6">
-                <circle cx="33" cy="118" r="11" />
-                <circle cx="29" cy="141" r="9" />
-                <circle cx="41" cy="163" r="10" />
-                <circle cx="95" cy="163" r="10" />
-                <circle cx="107" cy="141" r="9" />
-                <circle cx="103" cy="118" r="11" />
+              {/* shirt sleeves and tucked arms, like a plump uniformed chaukidar. */}
+              <g fill="#A89458" stroke="#4A3C22" strokeWidth="2">
+                <path d="M34 112 Q21 127 31 145 Q39 137 43 120 Z" />
+                <path d="M102 112 Q115 127 105 145 Q97 137 93 120 Z" />
+                <path d="M45 161 Q48 181 55 196" fill="none" strokeLinecap="round" />
+                <path d="M91 161 Q88 181 81 196" fill="none" strokeLinecap="round" />
               </g>
 
-              {/* body */}
+              {/* khaki uniform body with a round belly and pocket details. */}
               <path
-                d="M68 88 C90 88 106 106 106 132 C106 160 90 178 68 178 C46 178 30 160 30 132 C30 106 46 88 68 88 Z"
+                d="M68 88 C91 88 106 108 106 137 C106 164 91 183 68 183 C45 183 30 164 30 137 C30 108 45 88 68 88 Z"
                 fill="url(#mascotBody)"
-                stroke="#3B4696"
+                stroke="#4A3C22"
                 strokeWidth="2.5"
               />
+              <path d="M68 98 L68 178" stroke="#6D5D31" strokeWidth="2" strokeLinecap="round" opacity="0.7" />
+              <g fill="#A89458" stroke="#4A3C22" strokeWidth="1.8">
+                <path d="M43 115 h17 v17 h-17 Z" />
+                <path d="M76 115 h17 v17 h-17 Z" />
+                <path d="M43 115 l8 7 l9 -7" fill="none" />
+                <path d="M76 115 l8 7 l9 -7" fill="none" />
+              </g>
+              <g fill="#4A3C22" opacity="0.75">
+                <circle cx="68" cy="115" r="2" />
+                <circle cx="68" cy="133" r="2" />
+                <circle cx="68" cy="151" r="2" />
+              </g>
+              <ellipse cx="68" cy="154" rx="23" ry="22" fill="#D1BF82" opacity="0.28" />
 
               {/* right arm: whistle at mouth while chasing, salute on hover. */}
               {angry ? (
                 <g className="mascot-whistle-arm">
-                  <path d="M99 148 Q91 151 83 145 Q78 141 76 137" fill="none" stroke="#3B4696" strokeWidth="17" strokeLinecap="round" />
-                  <path d="M99 148 Q91 151 83 145 Q78 141 76 137" fill="none" stroke="#7482D6" strokeWidth="12" strokeLinecap="round" />
-                  <ellipse cx="76" cy="137" rx="8" ry="6" fill="#7482D6" stroke="#3B4696" strokeWidth="2.5" transform="rotate(24 76 137)" />
+                  <path d="M99 148 Q91 151 83 145 Q78 141 76 137" fill="none" stroke="#4A3C22" strokeWidth="17" strokeLinecap="round" />
+                  <path d="M99 148 Q91 151 83 145 Q78 141 76 137" fill="none" stroke="#B5A064" strokeWidth="12" strokeLinecap="round" />
+                  <ellipse cx="76" cy="137" rx="8" ry="6" fill="#B5A064" stroke="#4A3C22" strokeWidth="2.5" transform="rotate(24 76 137)" />
                 </g>
               ) : saluting ? (
                 <g className="mascot-salute">
-                  <path d="M99 148 Q112 137 108 123 Q105 113 98 106" fill="none" stroke="#3B4696" strokeWidth="17" strokeLinecap="round" />
-                  <path d="M99 148 Q112 137 108 123 Q105 113 98 106" fill="none" stroke="#7482D6" strokeWidth="12" strokeLinecap="round" />
-                  <ellipse cx="94" cy="104" rx="9" ry="6" fill="#7482D6" stroke="#3B4696" strokeWidth="2.5" transform="rotate(-18 94 104)" />
-                  <path d="M88 101 L102 106" stroke="#AAB4F2" strokeWidth="1.6" strokeLinecap="round" />
+                  <path d="M99 148 Q112 137 108 123 Q105 113 98 106" fill="none" stroke="#4A3C22" strokeWidth="17" strokeLinecap="round" />
+                  <path d="M99 148 Q112 137 108 123 Q105 113 98 106" fill="none" stroke="#B5A064" strokeWidth="12" strokeLinecap="round" />
+                  <ellipse cx="94" cy="104" rx="9" ry="6" fill="#B5A064" stroke="#4A3C22" strokeWidth="2.5" transform="rotate(-18 94 104)" />
+                  <path d="M88 101 L102 106" stroke="#DED19A" strokeWidth="1.6" strokeLinecap="round" />
                 </g>
               ) : (
                 <ellipse
@@ -378,8 +389,8 @@ export default function Mascot() {
                   cy="146"
                   rx="13"
                   ry="7.5"
-                  fill="#7482D6"
-                  stroke="#3B4696"
+                  fill="#B5A064"
+                  stroke="#4A3C22"
                   strokeWidth="2.5"
                   transform="rotate(24 103 146)"
                   className={mode === 'hanging' ? 'mascot-wave' : ''}
@@ -390,27 +401,27 @@ export default function Mascot() {
               {/* left arm and wrapped fist genuinely grip the baton handle. */}
               {angry ? (
                 <g className="mascot-stick-arm">
-                  <path d="M38 151 Q28 143 37 130" fill="none" stroke="#3B4696" strokeWidth="17" strokeLinecap="round" />
-                  <path d="M38 151 Q28 143 37 130" fill="none" stroke="#7482D6" strokeWidth="12" strokeLinecap="round" />
-                  <ellipse cx="39" cy="130" rx="10" ry="8" fill="#7482D6" stroke="#3B4696" strokeWidth="2.5" transform="rotate(-18 39 130)" />
-                  <g stroke="#AAB4F2" strokeWidth="1.5" strokeLinecap="round">
+                  <path d="M38 151 Q28 143 37 130" fill="none" stroke="#4A3C22" strokeWidth="17" strokeLinecap="round" />
+                  <path d="M38 151 Q28 143 37 130" fill="none" stroke="#B5A064" strokeWidth="12" strokeLinecap="round" />
+                  <ellipse cx="39" cy="130" rx="10" ry="8" fill="#B5A064" stroke="#4A3C22" strokeWidth="2.5" transform="rotate(-18 39 130)" />
+                  <g stroke="#DED19A" strokeWidth="1.5" strokeLinecap="round">
                     <path d="M32 126 L44 130" />
                     <path d="M32 130 L43 134" />
                     <path d="M34 134 L41 136" />
                   </g>
-                  <path d="M44 124 Q49 128 45 134" fill="none" stroke="#3B4696" strokeWidth="2" strokeLinecap="round" />
+                  <path d="M44 124 Q49 128 45 134" fill="none" stroke="#4A3C22" strokeWidth="2" strokeLinecap="round" />
                 </g>
               ) : (
                 <g>
-                  <path d="M43 151 Q38 148 34 145" fill="none" stroke="#3B4696" strokeWidth="15" strokeLinecap="round" />
-                  <path d="M43 151 Q38 148 34 145" fill="none" stroke="#7482D6" strokeWidth="10" strokeLinecap="round" />
-                  <ellipse cx="34" cy="145" rx="10" ry="8" fill="#7482D6" stroke="#3B4696" strokeWidth="2.5" transform="rotate(-6 34 145)" />
-                  <g stroke="#AAB4F2" strokeWidth="1.5" strokeLinecap="round">
+                  <path d="M43 151 Q38 148 34 145" fill="none" stroke="#4A3C22" strokeWidth="15" strokeLinecap="round" />
+                  <path d="M43 151 Q38 148 34 145" fill="none" stroke="#B5A064" strokeWidth="10" strokeLinecap="round" />
+                  <ellipse cx="34" cy="145" rx="10" ry="8" fill="#B5A064" stroke="#4A3C22" strokeWidth="2.5" transform="rotate(-6 34 145)" />
+                  <g stroke="#DED19A" strokeWidth="1.5" strokeLinecap="round">
                     <path d="M27 141 L40 141" />
                     <path d="M26 145 L40 145" />
                     <path d="M28 149 L39 149" />
                   </g>
-                  <path d="M40 138 Q45 143 41 149" fill="none" stroke="#3B4696" strokeWidth="2" strokeLinecap="round" />
+                  <path d="M40 138 Q45 143 41 149" fill="none" stroke="#4A3C22" strokeWidth="2" strokeLinecap="round" />
                 </g>
               )}
 
@@ -418,7 +429,7 @@ export default function Mascot() {
               <path
                 d={angry ? 'M72 103 C84 112 82 126 78 138' : 'M72 103 C92 108 104 124 105 141'}
                 fill="none"
-                stroke="#283164"
+                stroke="#4A3C22"
                 strokeWidth="2"
                 strokeLinecap="round"
               />
@@ -439,21 +450,29 @@ export default function Mascot() {
                 </g>
               )}
 
+              {/* expressive face, big nose, and curled moustache inspired by the reference. */}
+              <ellipse cx="68" cy="122" rx="35" ry="38" fill="#D99258" stroke="#4A3C22" strokeWidth="2.4" />
+              <ellipse cx="68" cy="137" rx="10" ry="16" fill="#E7A66E" stroke="#6B3B24" strokeWidth="2" />
+              <circle cx="63" cy="134" r="1.6" fill="#5B301D" />
+              <circle cx="73" cy="134" r="1.6" fill="#5B301D" />
+              <path d="M28 126 Q20 130 26 139" fill="#D99258" stroke="#4A3C22" strokeWidth="2" />
+              <path d="M108 126 Q116 130 110 139" fill="#D99258" stroke="#4A3C22" strokeWidth="2" />
+
               {/* cheeks */}
-              <circle cx="43" cy="141" r="6" fill="#F2A6B0" opacity="0.55" />
-              <circle cx="93" cy="141" r="6" fill="#F2A6B0" opacity="0.55" />
+              <circle cx="43" cy="141" r="6" fill="#F2A076" opacity="0.55" />
+              <circle cx="93" cy="141" r="6" fill="#F2A076" opacity="0.55" />
 
               {/* eyebrows — only while chasing (angry) */}
               {angry && (
-                <g stroke="#20264D" strokeWidth="3.2" strokeLinecap="round">
+                <g stroke="#2C2119" strokeWidth="3.2" strokeLinecap="round">
                   <path d="M42 118 L60 124" />
                   <path d="M76 124 L94 118" />
                 </g>
               )}
 
               {/* eyes: tracking pupils */}
-              <ellipse cx="52" cy="132" rx="13" ry="14" fill="#FFFFFF" stroke="#3B4696" strokeWidth="2" />
-              <ellipse cx="84" cy="132" rx="13" ry="14" fill="#FFFFFF" stroke="#3B4696" strokeWidth="2" />
+              <ellipse cx="52" cy="132" rx="13" ry="14" fill="#FFFFFF" stroke="#4A3C22" strokeWidth="2" />
+              <ellipse cx="84" cy="132" rx="13" ry="14" fill="#FFFFFF" stroke="#4A3C22" strokeWidth="2" />
               <g style={{ transform: `translate(${pupil.x}px, ${pupil.y}px)`, transition: 'transform 70ms linear' }}>
                 <circle cx="52" cy="134" r="6" fill="#14151B" />
                 <circle cx="84" cy="134" r="6" fill="#14151B" />
@@ -461,24 +480,31 @@ export default function Mascot() {
                 <circle cx="86.2" cy="131.2" r="1.8" fill="#FFFFFF" />
               </g>
 
+              {/* curled moustache, then mouth underneath. */}
+              <g fill="#244C43" stroke="#18352F" strokeWidth="2">
+                <path d="M63 145 C51 135 36 138 33 151 C43 158 56 157 66 148 Z" />
+                <path d="M73 145 C85 135 100 138 103 151 C93 158 80 157 70 148 Z" />
+                <path d="M37 151 C29 151 27 145 32 141" fill="none" strokeLinecap="round" />
+                <path d="M99 151 C107 151 109 145 104 141" fill="none" strokeLinecap="round" />
+              </g>
+
               {/* mouth: smile normally, firm frown while chasing */}
               {angry ? (
-                <path d="M54 154 Q68 146 82 154" stroke="#20264D" strokeWidth="3.2" strokeLinecap="round" fill="none" />
+                <path d="M57 164 Q68 158 79 164" stroke="#2C2119" strokeWidth="3" strokeLinecap="round" fill="none" />
               ) : (
-                <path d="M56 150 Q68 157 80 150" stroke="#20264D" strokeWidth="3.2" strokeLinecap="round" fill="none" />
+                <path d="M58 162 Q68 167 78 162" stroke="#2C2119" strokeWidth="3" strokeLinecap="round" fill="none" />
               )}
 
-              {/* guard cap */}
+              {/* soft beret, closer to the reference illustration. */}
               <path
-                d="M42 94 C42 68 94 68 94 94 L94 102 L42 102 Z"
-                fill="#E4D2A6"
-                stroke="#3B4696"
+                d="M31 103 C22 82 41 65 72 67 C101 69 110 87 94 101 C77 96 54 97 31 103 Z"
+                fill="#D8C891"
+                stroke="#4A3C22"
                 strokeWidth="2.5"
                 strokeLinejoin="round"
               />
-              <ellipse cx="68" cy="102" rx="36" ry="8" fill="#C9AE79" stroke="#3B4696" strokeWidth="2.5" />
-              <circle cx="68" cy="82" r="7.5" fill="#232A5C" stroke="#FFFFFF" strokeWidth="1.6" />
-              <circle cx="68" cy="82" r="2.3" fill="#FFFFFF" />
+              <path d="M45 101 C54 91 78 90 94 101" fill="none" stroke="#8E7D45" strokeWidth="4" strokeLinecap="round" />
+              <path d="M72 69 C61 79 47 82 31 80" fill="none" stroke="#F1E4AF" strokeWidth="3" strokeLinecap="round" opacity="0.75" />
             </svg>
           </button>
         </div>
