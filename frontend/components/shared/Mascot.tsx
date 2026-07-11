@@ -2,30 +2,58 @@
 
 import { useEffect, useRef, useState } from 'react';
 
-type Mode = 'hanging' | 'chasing' | 'returning' | 'patrolling';
+type Mode = 'hanging' | 'chasing' | 'returning';
 
 // --- Tunable constants -----------------------------------------------
 // The character is drawn in a 136×235 viewBox and rendered at DISPLAY_W ×
 // DISPLAY_H on screen. These offsets say "where, in screen pixels, is the
-// dock point / body-center relative to the wrapper's top-left corner" so we
-// can place him beside the logo, or center the body on the
-// cursor. They're hand-estimated (no way to render a live browser in this
-// environment) — nudge them if he doesn't sit neatly beside the badge.
+// body-center relative to the wrapper's top-left corner so he can follow the
+// cursor without placing his face directly under it.
 const DISPLAY_W = 80;
 const DISPLAY_H = 138;
-const DOCK_OFFSET = { x: 29, y: 12 };
 const BODY_OFFSET = { x: 40, y: 96 }; // body/face center, from wrapper top-left
 
 const EYE_MOVE_RANGE = 6; // svg user units the pupils can drift
-const IDLE_MOUSE_MS = 900; // how long the cursor must sit still before the chase ends
 const HOVER_DELAY_MS = 180;
+const DOCK_CHECK_MS = 700;
 
-function getAnchorPoint() {
-  if (typeof document === 'undefined') return null;
-  const el = document.getElementById('mascot-anchor');
-  if (!el) return null;
-  const r = el.getBoundingClientRect();
-  return { x: r.right - 4, y: r.top + 4 };
+function getSafeDockPosition() {
+  const margin = 14;
+  const top = 76;
+  const bottom = Math.max(top, window.innerHeight - DISPLAY_H - margin);
+  const right = Math.max(margin, window.innerWidth - DISPLAY_W - margin);
+  const candidates = [
+    { x: margin, y: top, side: 'left' as const },
+    { x: right, y: top, side: 'right' as const },
+    { x: margin, y: bottom, side: 'left' as const },
+    { x: right, y: bottom, side: 'right' as const },
+  ];
+  const blockers = Array.from(
+    document.querySelectorAll<HTMLElement>(
+      'main h1, main h2, main h3, main p, main a, main button, main input, main select, main table, main canvas'
+    )
+  ).map((element) => element.getBoundingClientRect()).filter((rect) => (
+    rect.width > 0 &&
+    rect.height > 0 &&
+    rect.bottom > 0 &&
+    rect.top < window.innerHeight &&
+    rect.right > 0 &&
+    rect.left < window.innerWidth
+  ));
+
+  function score(candidate: (typeof candidates)[number]) {
+    const left = candidate.x - 8;
+    const rightEdge = candidate.x + DISPLAY_W + 8;
+    const topEdge = candidate.y - 8;
+    const bottomEdge = candidate.y + DISPLAY_H + 8;
+    return blockers.reduce((total, rect) => {
+      const overlapWidth = Math.max(0, Math.min(rightEdge, rect.right) - Math.max(left, rect.left));
+      const overlapHeight = Math.max(0, Math.min(bottomEdge, rect.bottom) - Math.max(topEdge, rect.top));
+      return total + overlapWidth * overlapHeight;
+    }, 0);
+  }
+
+  return candidates.reduce((best, candidate) => score(candidate) < score(best) ? candidate : best);
 }
 
 export default function Mascot() {
@@ -35,11 +63,11 @@ export default function Mascot() {
 
   const posRef = useRef({ x: -200, y: -200 });
   const initializedRef = useRef(false);
+  const safeDockRef = useRef({ x: 14, y: 76, side: 'left' as 'left' | 'right' });
+  const lastDockCheckRef = useRef(0);
   const mouseRef = useRef({ x: -9999, y: -9999 });
-  const lastMoveRef = useRef(Date.now());
   const jumpStartRef = useRef<number | null>(null);
-  const patrolXRef = useRef<number | null>(null);
-  const patrolDirRef = useRef<1 | -1>(-1); // -1 = moving left first, per the brief
+  const chaseStartedAtRef = useRef(0);
   const facingRef = useRef<1 | -1>(1);
   const rafRef = useRef<number | null>(null);
   const hoverTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -55,14 +83,13 @@ export default function Mascot() {
   const [bubbleVisible, setBubbleVisible] = useState(false);
   const [saluting, setSaluting] = useState(false);
   const [blowing, setBlowing] = useState(false);
+  const [bubbleOnLeft, setBubbleOnLeft] = useState(false);
   const [, setFacing] = useState<1 | -1>(1);
 
-  // --- Mouse tracking: powers both eye-tracking and the chase/idle logic --
+  // --- Mouse tracking: powers both eye-tracking and chase movement. --------
   useEffect(() => {
     function handleMove(e: MouseEvent) {
       mouseRef.current = { x: e.clientX, y: e.clientY };
-      lastMoveRef.current = Date.now();
-
       const cx = posRef.current.x + BODY_OFFSET.x;
       const cy = posRef.current.y + BODY_OFFSET.y - 20;
       const dx = e.clientX - cx;
@@ -75,23 +102,19 @@ export default function Mascot() {
     return () => window.removeEventListener('mousemove', handleMove);
   }, []);
 
-  // --- Patrol trigger from audit pages (see run/page.tsx) ------------------
+  // A click anywhere after the initial mascot click ends the chase.
   useEffect(() => {
-    function start() {
-      if (modeRef.current === 'chasing') return; // don't interrupt a chase
-      patrolXRef.current = null;
-      setBubbleVisible(false);
-      setMode('patrolling');
+    function stopChase() {
+      if (
+        modeRef.current === 'chasing' &&
+        Date.now() - chaseStartedAtRef.current > 100
+      ) {
+        modeRef.current = 'returning';
+        setMode('returning');
+      }
     }
-    function end() {
-      if (modeRef.current === 'patrolling') setMode('returning');
-    }
-    window.addEventListener('chaukidar:patrol-start', start);
-    window.addEventListener('chaukidar:patrol-end', end);
-    return () => {
-      window.removeEventListener('chaukidar:patrol-start', start);
-      window.removeEventListener('chaukidar:patrol-end', end);
-    };
+    window.addEventListener('click', stopChase);
+    return () => window.removeEventListener('click', stopChase);
   }, []);
 
   // --- Occasional whistle blow ----------------------------------------
@@ -120,24 +143,29 @@ export default function Mascot() {
     }
 
     function frame() {
-      const anchor = getAnchorPoint();
+      const now = Date.now();
+      if (now - lastDockCheckRef.current >= DOCK_CHECK_MS) {
+        const nextDock = getSafeDockPosition();
+        safeDockRef.current = nextDock;
+        lastDockCheckRef.current = now;
+        setBubbleOnLeft(nextDock.side === 'right');
+      }
+      const dock = safeDockRef.current;
       const m = modeRef.current;
 
       if (m === 'hanging') {
-        if (anchor) {
-          const target = { x: anchor.x - DOCK_OFFSET.x, y: anchor.y - DOCK_OFFSET.y };
-          if (!initializedRef.current) {
-            posRef.current = { ...target };
-            initializedRef.current = true;
-          }
-          lerp(posRef.current, target, 0.18);
+        const target = { x: dock.x, y: dock.y };
+        if (!initializedRef.current) {
+          posRef.current = { ...target };
+          initializedRef.current = true;
         }
-        if (facingRef.current !== 1) {
-          facingRef.current = 1;
-          setFacing(1);
+        lerp(posRef.current, target, 0.18);
+        const dockFacing = dock.side === 'right' ? -1 : 1;
+        if (facingRef.current !== dockFacing) {
+          facingRef.current = dockFacing;
+          setFacing(dockFacing);
         }
       } else if (m === 'chasing') {
-        const now = Date.now();
         let target = {
           x: mouseRef.current.x - BODY_OFFSET.x,
           y: mouseRef.current.y - BODY_OFFSET.y - 30,
@@ -161,47 +189,21 @@ export default function Mascot() {
             setFacing(nextFacing);
           }
         }
-
-        if (now - lastMoveRef.current > IDLE_MOUSE_MS) {
-          setMode('returning');
-        }
       } else if (m === 'returning') {
-        if (anchor) {
-          const target = { x: anchor.x - DOCK_OFFSET.x, y: anchor.y - DOCK_OFFSET.y };
-          lerp(posRef.current, target, 0.09);
-          const dist = Math.hypot(posRef.current.x - target.x, posRef.current.y - target.y);
-          const dx = target.x - posRef.current.x;
-          if (Math.abs(dx) > 3) {
-            const nextFacing = dx < 0 ? -1 : 1;
-            if (nextFacing !== facingRef.current) {
-              facingRef.current = nextFacing;
-              setFacing(nextFacing);
-            }
+        const target = { x: dock.x, y: dock.y };
+        lerp(posRef.current, target, 0.09);
+        const dist = Math.hypot(posRef.current.x - target.x, posRef.current.y - target.y);
+        const dx = target.x - posRef.current.x;
+        if (Math.abs(dx) > 3) {
+          const nextFacing = dx < 0 ? -1 : 1;
+          if (nextFacing !== facingRef.current) {
+            facingRef.current = nextFacing;
+            setFacing(nextFacing);
           }
-          if (dist < 8) setMode('hanging');
         }
-      } else if (m === 'patrolling') {
-        if (patrolXRef.current === null) {
-          patrolXRef.current = window.innerWidth - 120;
-          patrolDirRef.current = -1;
-        }
-        patrolXRef.current += patrolDirRef.current * 1.7;
-        const leftBound = 40;
-        const rightBound = window.innerWidth - 120;
-        if (patrolXRef.current <= leftBound) {
-          patrolXRef.current = leftBound;
-          patrolDirRef.current = 1;
-        } else if (patrolXRef.current >= rightBound) {
-          patrolXRef.current = rightBound;
-          patrolDirRef.current = -1;
-        }
-        const bob = Math.sin(Date.now() / 160) * 5;
-        const target = { x: patrolXRef.current, y: 84 + bob };
-        lerp(posRef.current, target, 0.25);
-
-        if (facingRef.current !== patrolDirRef.current) {
-          facingRef.current = patrolDirRef.current;
-          setFacing(patrolDirRef.current);
+        if (dist < 8) {
+          modeRef.current = 'hanging';
+          setMode('hanging');
         }
       }
 
@@ -238,7 +240,8 @@ export default function Mascot() {
     setBubbleVisible(false);
     setSaluting(false);
     jumpStartRef.current = Date.now();
-    lastMoveRef.current = Date.now();
+    chaseStartedAtRef.current = Date.now();
+    modeRef.current = 'chasing';
     setMode('chasing');
   }
 
@@ -259,7 +262,7 @@ export default function Mascot() {
       style={{ pointerEvents: 'none', willChange: 'transform' }}
     >
       {/* speech bubble — sibling of the swaying body so it stays upright */}
-      <div className={`speech-bubble ${bubbleVisible ? 'speech-bubble-visible' : ''}`}>
+      <div className={`speech-bubble ${bubbleOnLeft ? 'speech-bubble-left' : ''} ${bubbleVisible ? 'speech-bubble-visible' : ''}`}>
         Salam sahab! Allahrakha on duty
       </div>
 

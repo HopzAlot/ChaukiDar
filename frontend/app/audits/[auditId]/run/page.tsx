@@ -22,21 +22,6 @@ export default function AuditRunPage() {
   const [recent, setRecent] = useState<AuditResult[]>([]);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // The guard patrols (jumps off the logo, paces the top of the screen)
-  // for as long as this run is in flight, then heads back to the logo.
-  useEffect(() => {
-    window.dispatchEvent(new Event('chaukidar:patrol-start'));
-    return () => {
-      window.dispatchEvent(new Event('chaukidar:patrol-end'));
-    };
-  }, [auditId]);
-
-  useEffect(() => {
-    if (run?.status === 'completed' || run?.status === 'failed') {
-      window.dispatchEvent(new Event('chaukidar:patrol-end'));
-    }
-  }, [run?.status]);
-
   useEffect(() => {
     let cancelled = false;
 
