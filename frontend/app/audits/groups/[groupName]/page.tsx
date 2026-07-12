@@ -2,12 +2,12 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, Activity, BarChart3, FileText } from 'lucide-react';
+import { ArrowLeft, Activity, BarChart3, FileText, RotateCcw } from 'lucide-react';
 import { useParams } from 'next/navigation';
 import Navbar from '@/components/layout/Navbar';
 import Badge from '@/components/shared/Badge';
 import LoadingSpinner from '@/components/shared/LoadingSpinner';
-import { listAuditRuns } from '@/lib/api';
+import { listAuditRuns, startAuditRun } from '@/lib/api';
 import type { AuditRun } from '@/lib/types';
 
 const STATUS_TONE = {
@@ -26,6 +26,7 @@ export default function AuditGroupPage() {
   const groupName = decodeURIComponent(params.groupName);
   const [audits, setAudits] = useState<AuditRun[] | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [retryingIds, setRetryingIds] = useState<number[]>([]);
 
   useEffect(() => {
     listAuditRuns()
@@ -39,6 +40,22 @@ export default function AuditGroupPage() {
       .sort((a, b) => modelLabel(a).localeCompare(modelLabel(b))),
     [audits, groupName]
   );
+
+  async function handleRetry(auditId: number) {
+    setRetryingIds((ids) => [...ids, auditId]);
+    setError(null);
+    try {
+      await startAuditRun(auditId);
+      setAudits((current) => current?.map((audit) => audit.id === auditId
+        ? { ...audit, status: 'running', progress_current: 0, progress_total: 0 }
+        : audit
+      ) ?? current);
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : 'Unable to retry audit run.');
+    } finally {
+      setRetryingIds((ids) => ids.filter((id) => id !== auditId));
+    }
+  }
 
   return (
     <>
@@ -83,6 +100,16 @@ export default function AuditGroupPage() {
                   <Link href={`/audits/${audit.id}/results`} className="inline-flex items-center gap-2 rounded-sm border border-line px-3 py-2 text-sm font-medium text-ink transition hover:border-brand/40">
                     <BarChart3 size={14} /> Results
                   </Link>
+                  {audit.status === 'failed' && (
+                    <button
+                      type="button"
+                      onClick={() => handleRetry(audit.id)}
+                      disabled={retryingIds.includes(audit.id)}
+                      className="inline-flex items-center gap-2 rounded-sm bg-brand px-3 py-2 text-sm font-medium text-white transition hover:bg-brand-soft disabled:cursor-not-allowed disabled:opacity-40"
+                    >
+                      <RotateCcw size={14} /> {retryingIds.includes(audit.id) ? 'Retrying...' : 'Retry'}
+                    </button>
+                  )}
                   <Link href={`/audits/${audit.id}/report`} className="inline-flex items-center gap-2 rounded-sm bg-brand px-3 py-2 text-sm font-medium text-white transition hover:bg-brand-soft">
                     <FileText size={14} /> Report
                   </Link>

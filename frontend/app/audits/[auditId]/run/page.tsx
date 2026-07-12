@@ -8,7 +8,7 @@ import AuditProgressBar from '@/components/audit/AuditProgressBar';
 import Badge from '@/components/shared/Badge';
 import LoadingSpinner from '@/components/shared/LoadingSpinner';
 import { RESULT_LABEL_META } from '@/lib/constants';
-import { getAuditResults, getAuditRun } from '@/lib/api';
+import { getAuditResults, getAuditRun, startAuditRun } from '@/lib/api';
 import type { AuditResult, AuditRun } from '@/lib/types';
 
 const POLL_INTERVAL_MS = 2000;
@@ -20,6 +20,9 @@ export default function AuditRunPage() {
 
   const [run, setRun] = useState<AuditRun | null>(null);
   const [recent, setRecent] = useState<AuditResult[]>([]);
+  const [retrying, setRetrying] = useState(false);
+  const [retryError, setRetryError] = useState<string | null>(null);
+  const [pollVersion, setPollVersion] = useState(0);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
@@ -45,7 +48,22 @@ export default function AuditRunPage() {
       cancelled = true;
       if (timerRef.current) clearInterval(timerRef.current);
     };
-  }, [auditId]);
+  }, [auditId, pollVersion]);
+
+  async function handleRetry() {
+    setRetrying(true);
+    setRetryError(null);
+    try {
+      await startAuditRun(auditId);
+      setRun((current) => current ? { ...current, status: 'running', progress_current: 0, progress_total: 0 } : current);
+      setRecent([]);
+      setPollVersion((value) => value + 1);
+    } catch (reason) {
+      setRetryError(reason instanceof Error ? reason.message : 'Unable to retry audit.');
+    } finally {
+      setRetrying(false);
+    }
+  }
 
   return (
     <>
@@ -106,15 +124,34 @@ export default function AuditRunPage() {
                   </p>
                 </div>
 
-                {run.status === 'completed' && (
-                  <button
-                    type="button"
-                    onClick={() => router.push(`/audits/${auditId}/results`)}
-                    className="rounded-sm bg-brand px-5 py-3 text-sm font-medium text-white transition hover:bg-brand-soft"
-                  >
-                    View results dashboard
-                  </button>
+                {retryError && (
+                  <p className="rounded-md border border-risk-high bg-risk-high-tint px-4 py-3 text-sm text-risk-high">
+                    {retryError}
+                  </p>
                 )}
+
+                <div className="flex flex-wrap gap-3">
+                  {run.status === 'failed' && (
+                    <button
+                      type="button"
+                      onClick={handleRetry}
+                      disabled={retrying}
+                      className="rounded-sm bg-brand px-5 py-3 text-sm font-medium text-white transition hover:bg-brand-soft disabled:cursor-not-allowed disabled:opacity-40"
+                    >
+                      {retrying ? 'Retrying...' : 'Retry run'}
+                    </button>
+                  )}
+
+                  {run.status === 'completed' && (
+                    <button
+                      type="button"
+                      onClick={() => router.push(`/audits/${auditId}/results`)}
+                      className="rounded-sm bg-brand px-5 py-3 text-sm font-medium text-white transition hover:bg-brand-soft"
+                    >
+                      View results dashboard
+                    </button>
+                  )}
+                </div>
               </div>
             )}
           </div>
