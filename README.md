@@ -4,6 +4,8 @@ Chaukidar is a multilingual AI safety audit platform for South Asian languages. 
 
 Built for **AMD Developer Hackathon ACT II, Track 3 / Unicorn Track**.
 
+![Chaukidar dashboard screenshot](docs/assets/chaukidar-home.png)
+
 ## Live Demo
 
 Public demo URL: https://chaukidar.vercel.app/
