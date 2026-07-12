@@ -8,9 +8,9 @@ import HarmCategorySelector from '@/components/audit/HarmCategorySelector';
 import LanguageSelector from '@/components/audit/LanguageSelector';
 import TargetModelForm from '@/components/audit/TargetModelForm';
 import { HARM_CATEGORIES, LANGUAGES } from '@/lib/constants';
-import { createAuditRun, importAmdAudit, registerTargetModel, startAuditRun } from '@/lib/api';
+import { createAuditRun, importAmdAudit, importCustomDataset, registerTargetModel, startAuditRun, validateCustomDataset } from '@/lib/api';
 import type { TargetSelection } from '@/components/audit/TargetModelForm';
-import type { LanguageCode } from '@/lib/types';
+import type { CustomDatasetImportResult, CustomDatasetPayload, LanguageCode } from '@/lib/types';
 
 export default function NewAuditPage() {
   const router = useRouter();
@@ -26,6 +26,11 @@ export default function NewAuditPage() {
   const [error, setError] = useState<string | null>(null);
   const [importFile, setImportFile] = useState<File | null>(null);
   const [importing, setImporting] = useState(false);
+  const [customDataset, setCustomDataset] = useState<CustomDatasetPayload | null>(null);
+  const [customDatasetFileName, setCustomDatasetFileName] = useState<string | null>(null);
+  const [customDatasetStatus, setCustomDatasetStatus] = useState<CustomDatasetImportResult | null>(null);
+  const [customDatasetValidating, setCustomDatasetValidating] = useState(false);
+  const [customDatasetError, setCustomDatasetError] = useState<string | null>(null);
 
   const selectedTargetCount = target
     ? 'existing' in target
@@ -40,13 +45,50 @@ export default function NewAuditPage() {
     selectedTargetCount > 0 &&
     languages.length > 0 &&
     categories.length > 0 &&
-    (includeTranslation || includeNative);
+    (includeTranslation || includeNative) &&
+    !customDatasetValidating &&
+    customDatasetError === null;
+
+  async function handleCustomDatasetFile(file: File | null) {
+    setCustomDataset(null);
+    setCustomDatasetFileName(file?.name ?? null);
+    setCustomDatasetStatus(null);
+    setCustomDatasetError(null);
+    if (!file) return;
+    setCustomDatasetValidating(true);
+    try {
+      if (file.size > 5 * 1024 * 1024) {
+        throw new Error('Custom dataset JSON must be smaller than 5 MB.');
+      }
+      const parsed: unknown = JSON.parse(await file.text());
+      const records = Array.isArray(parsed)
+        ? parsed
+        : typeof parsed === 'object' && parsed !== null && 'records' in parsed
+          ? (parsed as { records: unknown }).records
+          : null;
+      if (!Array.isArray(records)) {
+        throw new Error('Custom dataset must be a JSON array or an object with a records array.');
+      }
+      const payload = { records } as CustomDatasetPayload;
+      const validation = await validateCustomDataset(payload);
+      setCustomDataset(payload);
+      setCustomDatasetStatus(validation);
+    } catch (reason) {
+      setCustomDatasetError(reason instanceof Error ? reason.message : 'Invalid custom dataset JSON.');
+    } finally {
+      setCustomDatasetValidating(false);
+    }
+  }
 
   async function handleSubmit() {
     if (!canSubmit || !target) return;
     setSubmitting(true);
     setError(null);
     try {
+      if (customDataset) {
+        await importCustomDataset(customDataset);
+      }
+
       const selectedModels =
         'existing' in target
           ? target.existing
@@ -205,6 +247,41 @@ export default function NewAuditPage() {
             </div>
           </section>
 
+          <section className="rounded-lg border border-line bg-paper-raised p-6">
+            <h2 className="mb-3 font-display text-sm font-bold text-ink">Custom dataset</h2>
+            <p className="mb-4 text-sm leading-relaxed text-ink-soft">
+              Optional JSON upload. Chaukidar validates the format first, then imports it before starting the audit.
+              <span className="block text-xs text-ink-faint">seed_id is optional; backend generates one when missing.</span>
+            </p>
+            <input
+              type="file"
+              accept="application/json,.json"
+              onChange={(event) => handleCustomDatasetFile(event.target.files?.[0] ?? null)}
+              className="block w-full text-sm text-ink-soft file:mr-4 file:rounded-sm file:border-0 file:bg-brand-tint file:px-4 file:py-2 file:text-sm file:font-medium file:text-brand"
+            />
+            <pre className="mt-4 overflow-x-auto rounded-md border border-line bg-paper px-3 py-2 text-xs text-ink-soft">{`[
+  {
+    "harm_category": "fraud_scams",
+    "language": "ur",
+    "track": "native_adapted",
+    "prompt_text": "...",
+    "intent_summary": "...",
+    "risk_level_hint": "high"
+  }
+]`}</pre>
+            {customDatasetValidating && <p className="mt-3 text-sm text-ink-faint">Validating dataset...</p>}
+            {customDatasetError && (
+              <p className="mt-3 rounded-md border border-risk-high bg-risk-high-tint px-4 py-3 text-sm text-risk-high">
+                {customDatasetFileName ? `${customDatasetFileName}: ` : ''}{customDatasetError}
+              </p>
+            )}
+            {customDatasetStatus && (
+              <p className="mt-3 rounded-md border border-line bg-paper px-4 py-3 text-sm text-ink-soft">
+                Valid dataset: {customDatasetStatus.imported} records, {customDatasetStatus.generated_seed_ids} generated seed IDs, languages {customDatasetStatus.languages.join(', ') || 'none'}.
+              </p>
+            )}
+          </section>
+
           {error && (
             <p className="rounded-md border border-risk-high bg-risk-high-tint px-4 py-3 text-sm text-risk-high">
               {error}
@@ -220,8 +297,12 @@ export default function NewAuditPage() {
             >
               {submitting
                 ? selectedTargetCount > 1
-                  ? 'Starting parallel audits...'
-                  : 'Starting audit...'
+                  ? customDataset
+                    ? 'Importing dataset and starting audits...'
+                    : 'Starting parallel audits...'
+                  : customDataset
+                    ? 'Importing dataset and starting audit...'
+                    : 'Starting audit...'
                 : selectedTargetCount > 1
                   ? `Create ${selectedTargetCount} parallel audits`
                   : 'Create Fireworks audit'}

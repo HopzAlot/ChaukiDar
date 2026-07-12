@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 
 from app.database import Base, engine
-from app.routers import audits, reports, targets
+from app.routers import audits, datasets, reports, targets
 
 Base.metadata.create_all(bind=engine)
 
@@ -13,6 +13,7 @@ app = FastAPI(
 
 app.include_router(targets.router)
 app.include_router(audits.router)
+app.include_router(datasets.router)
 app.include_router(reports.router)
 
 

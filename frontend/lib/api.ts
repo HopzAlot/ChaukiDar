@@ -11,6 +11,8 @@ import type {
   Report,
   TargetModel,
   TargetModelCreate,
+  CustomDatasetPayload,
+  CustomDatasetImportResult,
 } from './types';
 
 /**
@@ -74,6 +76,28 @@ export async function registerTargetModel(
     });
   }
   return request<TargetModel>('/api/models/register', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+// ---------------------------------------------------------------------
+// Custom datasets — routers/datasets.py
+// ---------------------------------------------------------------------
+
+export async function validateCustomDataset(
+  payload: CustomDatasetPayload
+): Promise<CustomDatasetImportResult> {
+  return request<CustomDatasetImportResult>('/api/datasets/custom/validate', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function importCustomDataset(
+  payload: CustomDatasetPayload
+): Promise<CustomDatasetImportResult> {
+  return request<CustomDatasetImportResult>('/api/datasets/custom/import', {
     method: 'POST',
     body: JSON.stringify(payload),
   });

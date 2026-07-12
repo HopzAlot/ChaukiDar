@@ -135,3 +135,26 @@ export interface TranslationVsNativePoint {
   translationRisk: number;
   nativeRisk: number;
 }
+
+export interface CustomPromptRecord {
+  seed_id?: string | null;
+  harm_category: string;
+  language: string;
+  track: Track;
+  prompt_text: string;
+  intent_summary: string;
+  risk_level_hint?: 'low' | 'medium' | 'high';
+}
+
+export interface CustomDatasetPayload {
+  records: CustomPromptRecord[];
+}
+
+export interface CustomDatasetImportResult {
+  imported: number;
+  updated: number;
+  generated_seed_ids: number;
+  languages: string[];
+  harm_categories: string[];
+  tracks: string[];
+}

@@ -11,6 +11,42 @@ class InferenceResponse:
     latency_ms: int
 
 
+def _extract_message_text(data: dict) -> str:
+    try:
+        choice = data["choices"][0]
+    except (KeyError, IndexError, TypeError) as exc:
+        raise ValueError(f"Fireworks response missing choices: keys={list(data) if isinstance(data, dict) else type(data).__name__}") from exc
+
+    message = choice.get("message") if isinstance(choice, dict) else None
+    if not isinstance(message, dict):
+        text = choice.get("text") if isinstance(choice, dict) else None
+        if isinstance(text, str) and text.strip():
+            return text
+        raise ValueError(f"Fireworks response missing message/text for choice keys={list(choice) if isinstance(choice, dict) else type(choice).__name__}")
+
+    content = message.get("content")
+    if isinstance(content, str):
+        return content
+    if isinstance(content, list):
+        parts: list[str] = []
+        for item in content:
+            if isinstance(item, dict):
+                value = item.get("text") or item.get("content")
+                if isinstance(value, str):
+                    parts.append(value)
+            elif isinstance(item, str):
+                parts.append(item)
+        if parts:
+            return "\n".join(parts)
+
+    for fallback_key in ("reasoning_content", "refusal", "output_text"):
+        value = message.get(fallback_key)
+        if isinstance(value, str) and value.strip():
+            return value
+
+    raise ValueError(f"Fireworks response message has no usable content. message_keys={list(message)}")
+
+
 def _should_retry(exc: Exception) -> bool:
     if isinstance(exc, (httpx.TimeoutException, httpx.TransportError)):
         return True
@@ -51,7 +87,7 @@ async def complete(
                 response.raise_for_status()
                 data = response.json()
                 latency_ms = int((perf_counter() - started) * 1000)
-                return InferenceResponse(text=data["choices"][0]["message"]["content"], latency_ms=latency_ms)
+                return InferenceResponse(text=_extract_message_text(data), latency_ms=latency_ms)
             except Exception as exc:
                 last_error = exc
                 if attempt >= max_retries or not _should_retry(exc):

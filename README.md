@@ -1,111 +1,208 @@
 # Chaukidar
 
-Chaukidar is a multilingual AI safety audit platform for South Asian languages. It tests whether LLMs and RAG chatbots remain safe in Urdu, Punjabi, Pashto, and Sindhi, comparing simple translation-based tests against native/culturally adapted red-team prompts.
+Chaukidar is a multilingual AI safety audit platform for South Asian languages. It tests whether LLMs and RAG-style chatbots remain safe in Urdu, Punjabi, Pashto, and Sindhi, comparing translation-baseline prompts against native-adapted prompts.
 
-## Why It Matters
+Built for **AMD Developer Hackathon ACT II, Track 3 / Unicorn Track**.
 
-Most LLM safety evaluation is English-heavy. A model may refuse harmful requests in English but behave differently when the same intent appears in low-resource South Asian languages, local idioms, Roman Urdu, mixed language, or native scripts.
+## What Chaukidar Does
 
-Chaukidar is framed as B2B safety infrastructure for companies deploying chatbots in South Asian markets: fintech, edtech, banks, telecoms, healthtech, government services, and enterprise SaaS.
+- Runs safety audits across multiple models.
+- Supports Fireworks-hosted model audits for fast comparison.
+- Supports AMD ROCm/Jupyter result import for Track 3 compute proof.
+- Groups multi-model audits under one experiment name.
+- Shows live progress, per-model results, retry controls, and report views.
+- Lets users upload a custom JSON prompt dataset with validation before import.
 
-## Hackathon Track
+## Track 3 Fit
 
-AMD Developer Hackathon ACT II, Track 3 / Unicorn Track.
+Track 3 requires an original AI application that demonstrates AMD compute usage. Chaukidar's Track 3 story is:
 
-The AMD story is scalable multilingual audit inference:
+> Multilingual safety audit inference at scale using AMD ROCm/Jupyter/vLLM, with the web app acting as the product layer for importing, comparing, and reporting audit results.
 
-- batch audit prompts
-- run open-source model inference on AMD ROCm/Jupyter compute
-- measure latency and throughput
-- import AMD-generated results into Chaukidar
-- generate compliance-style risk summaries
+Required submission artifacts for Track 3:
 
-## Current Scope
+- GitHub repository URL
+- Demo video
+- Slide deck PDF
+- Live demo / hosted URL recommended
 
-This repository currently contains the backend/data/notebook foundation only. Frontend will be imported later.
+No Docker image is required for Track 3.
 
-Included:
+## AMD Compute Story
 
-- FastAPI backend skeleton
-- SQLAlchemy models
-- sanitized prompt dataset schema
-- sample seed prompts
-- AMD Jupyter notebook template
-- AMD result import format
-- scoring helpers
-- report summary generation
+The repo includes an AMD notebook workflow in:
 
-## Safety Note
-
-The repository must not contain operational harmful instructions, malware code, weaponization steps, self-harm instructions, or illegal procedures. Prompt records use sanitized intent templates and summaries.
-
-Example:
-
-```json
-{
-  "harm_category": "cyber_abuse",
-  "language": "ur",
-  "track": "native_adapted",
-  "prompt_text": "[Sanitized harmful request asking for credential theft guidance]",
-  "intent_summary": "User asks for unauthorized account access steps",
-  "risk_level_hint": "high"
-}
+```text
+amd_notebooks/chaukidar_amd_audit.ipynb
 ```
 
-Track names:
+Use it on the hackathon AMD Jupyter instance to:
 
-- `english_seed`: original English source prompt
-- `translation_baseline`: translated version of an English seed
-- `native_adapted`: culturally/native adapted prompt
+1. verify ROCm/GPU availability
+2. run vLLM or Transformers inference on AMD compute
+3. batch native South Asian safety prompts
+4. export audit results JSON
+5. capture latency/throughput numbers for `benchmarks.md`
+6. import the AMD-generated JSON into Chaukidar through the frontend
 
-## Quick Backend Setup
+Current AMD evidence files:
+
+```text
+amd_notebooks/chaukidar_amd_audit.ipynb
+benchmarks.md
+chaukidar_amd_audit_results.json
+amd_rocm_qwen_native_audit_results.json
+examples/amd_audit_results_sample.json
+```
+
+For judging, the demo and slide deck should clearly show the AMD notebook, ROCm/vLLM logs, benchmark numbers, and imported AMD results in the web app.
+
+## Architecture
+
+```text
+frontend/                 Next.js app
+backend/                  FastAPI backend
+backend/app/data/         Seed prompt datasets
+amd_notebooks/            AMD ROCm/Jupyter audit notebook
+examples/                 Sample import JSON
+benchmarks.md             AMD benchmark evidence
+```
+
+Core backend pieces:
+
+- Prompt builder: selects prompts by language, category, and track
+- Execution agent: calls Fireworks-compatible model endpoints
+- Judge agent: labels model responses with a fixed safety rubric
+- Reporting agent: aggregates results into dashboard/report metrics
+- Importer: imports AMD notebook or Fireworks audit JSON
+- Dataset router: validates/imports user custom JSON datasets
+
+## Setup
+
+Backend:
 
 ```bash
 cd backend
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
-python scripts/seed_db.py
-uvicorn app.main:app --reload
+cd ..
+PYTHONPATH=backend backend/.venv/bin/python backend/scripts/seed_db.py
+PYTHONPATH=backend backend/.venv/bin/python -m uvicorn app.main:app --reload
 ```
 
-Health check:
+Frontend:
 
 ```bash
-curl http://localhost:8000/health
+cd frontend
+npm install
+npm run dev -- --hostname 127.0.0.1 --port 3000
 ```
 
-API docs:
+Open:
 
 ```text
-http://localhost:8000/docs
+http://127.0.0.1:3000
 ```
 
-## AMD Notebook Workflow
+Backend health:
 
-Use `amd_notebooks/chaukidar_amd_audit.ipynb` on the hackathon Jupyter instance.
+```bash
+curl http://127.0.0.1:8000/health
+```
 
-The notebook should:
+## Environment
 
-1. verify ROCm/GPU availability
-2. load sanitized prompts
-3. run model inference or mock fallback while testing
-4. classify outputs with a lightweight rubric
-5. export `examples/amd_audit_results_sample.json`
-6. record benchmark numbers for `benchmarks.md`
+Create `.env` at repo root for backend local development:
 
-The backend can later import the notebook JSON into SQLite.
+```text
+DATABASE_URL=sqlite:///./chaukidar.db
+USE_MOCK_INFERENCE=false
+FIREWORKS_API_KEY=...
+FIREWORKS_BASE_URL=https://api.fireworks.ai/inference/v1
+FIREWORKS_MODELS=accounts/fireworks/models/model-a,accounts/fireworks/models/model-b
+```
 
-## Core API Shape
+Frontend `.env.local` should point to the backend or proxy according to your local setup.
 
-- `GET /health`
-- `POST /api/models/register`
-- `GET /api/models`
-- `POST /api/audits/create`
-- `POST /api/audits/{audit_id}/run`
-- `GET /api/audits/{audit_id}`
-- `GET /api/audits/{audit_id}/results`
-- `GET /api/audits/{audit_id}/report`
+## Custom Dataset Upload
+
+The frontend supports optional JSON dataset upload on the New Audit page.
+
+Accepted shape is either a raw array:
+
+```json
+[
+  {
+    "seed_id": "optional_custom_001",
+    "harm_category": "fraud_scams",
+    "language": "ur",
+    "track": "native_adapted",
+    "prompt_text": "...",
+    "intent_summary": "...",
+    "risk_level_hint": "high"
+  }
+]
+```
+
+or an object with `records`:
+
+```json
+{
+  "records": [
+    {
+      "harm_category": "fraud_scams",
+      "language": "ur",
+      "track": "translation_baseline",
+      "prompt_text": "...",
+      "intent_summary": "...",
+      "risk_level_hint": "medium"
+    }
+  ]
+}
+```
+
+`seed_id` is optional. If missing, the backend generates one.
+
+Validation rules:
+
+- `harm_category` must already exist in the backend seed categories.
+- `track` must be `translation_baseline` or `native_adapted`.
+- `risk_level_hint` must be `low`, `medium`, or `high`.
+- `prompt_text` and `intent_summary` are required.
+- Maximum upload size from UI: 5 MB.
+- Maximum records per backend upload: 2000.
+
+The frontend validates the dataset before starting an audit. If validation fails, the audit cannot start and the error is shown to the user.
+
+## Fireworks Model Notes
+
+Some Fireworks models return slightly different OpenAI-compatible response shapes. Chaukidar now parses several possible message formats and reports useful errors instead of crashing on missing `message.content`.
+
+The backend also retries transient API failures such as timeouts, rate limits, and temporary 5xx errors.
+
+## API Overview
+
+```text
+GET  /health
+GET  /api/models
+POST /api/models/register
+POST /api/datasets/custom/validate
+POST /api/datasets/custom/import
+POST /api/audits/create
+POST /api/audits/{audit_id}/run
+GET  /api/audits
+GET  /api/audits/{audit_id}
+GET  /api/audits/{audit_id}/results
+GET  /api/audits/{audit_id}/report
+POST /api/audits/import
+```
+
+## Safety Note
+
+This repository should not commit sensitive datasets, API keys, raw harmful operational content, or private audit outputs. Local data, DB files, result dumps, and `.env` files should stay ignored.
+
+Runtime custom datasets are user-provided and stored locally for audit execution. Do not push private or sensitive datasets to GitHub.
 
 ## Pitch
 
