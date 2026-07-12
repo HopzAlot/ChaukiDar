@@ -15,7 +15,12 @@ def get_database_url() -> str:
 
 
 database_url = get_database_url()
-connect_args = {"check_same_thread": False} if database_url.startswith("sqlite") else {}
+if database_url.startswith("sqlite"):
+    connect_args = {"check_same_thread": False}
+elif database_url.startswith("postgresql+psycopg"):
+    connect_args = {"sslmode": "require", "prepare_threshold": None}
+else:
+    connect_args = {}
 engine = create_engine(database_url, connect_args=connect_args)
 SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False)
 
