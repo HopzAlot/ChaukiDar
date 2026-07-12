@@ -7,6 +7,7 @@ import Navbar from '@/components/layout/Navbar';
 import Badge from '@/components/shared/Badge';
 import LoadingSpinner from '@/components/shared/LoadingSpinner';
 import { listAuditRuns } from '@/lib/api';
+import { displayModelName } from '@/lib/model-label';
 import type { AuditRun } from '@/lib/types';
 
 const STATUS_TONE = {
@@ -78,7 +79,7 @@ export default function AuditsPage() {
                 </div>
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
-                    <h2 className="truncate font-display text-sm font-bold text-ink">{group.name}</h2>
+                    <h2 className="truncate font-display text-sm font-bold text-ink">{displayModelName(group.name)}</h2>
                     <Badge tone={STATUS_TONE[group.status]}>{group.status}</Badge>
                   </div>
                   <p className="mt-2 text-xs text-ink-faint">

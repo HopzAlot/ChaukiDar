@@ -8,6 +8,7 @@ import Navbar from '@/components/layout/Navbar';
 import Badge from '@/components/shared/Badge';
 import LoadingSpinner from '@/components/shared/LoadingSpinner';
 import { listAuditRuns, startAuditRun } from '@/lib/api';
+import { displayModelName } from '@/lib/model-label';
 import type { AuditRun } from '@/lib/types';
 
 const STATUS_TONE = {
@@ -18,7 +19,7 @@ const STATUS_TONE = {
 } as const;
 
 function modelLabel(audit: AuditRun) {
-  return audit.target_model_name ?? audit.name;
+  return displayModelName(audit.target_model_name ?? audit.name);
 }
 
 export default function AuditGroupPage() {
@@ -66,7 +67,7 @@ export default function AuditGroupPage() {
             <ArrowLeft size={15} /> Audit groups
           </Link>
           <span className="block font-mono text-xs uppercase tracking-wider text-brand">Audit group</span>
-          <h1 className="mt-2 font-display text-2xl font-bold text-ink">{groupName}</h1>
+          <h1 className="mt-2 font-display text-2xl font-bold text-ink">{displayModelName(groupName)}</h1>
           <p className="mt-1 text-sm text-ink-soft">
             One run per model, grouped under this experiment name.
           </p>

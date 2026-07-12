@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { listTargetModels } from '@/lib/api';
+import { displayModelName } from '@/lib/model-label';
 import type { TargetModel, TargetModelCreate } from '@/lib/types';
 
 const FIREWORKS_ENDPOINT = 'https://api.fireworks.ai/inference/v1';
@@ -110,7 +111,7 @@ export default function TargetModelForm({
                       className="mt-0.5 h-4 w-4 accent-brand"
                     />
                     <span className="min-w-0 break-all font-mono text-xs text-ink">
-                      {model.name}
+                      {displayModelName(model.name)}
                     </span>
                   </label>
                 ))}
