@@ -45,15 +45,6 @@ The larger AMD notebook batch loaded 48 native-adapted prompts:
 
 ## AMD Dev Cloud Issue
 
-After the successful AMD runs, the AMD Dev Cloud notebook became unavailable/stuck around 90% while loading. Because of that, additional AMD experiments such as bigger datasets, multi-model ROCm comparison, and testing multiple Chaukidar agents directly on AMD GPUs could not be completed before submission.
+After the successful AMD runs, the AMD Dev Cloud notebook became unavailable/stuck around 90% while loading. Because of that, additional AMD experiments such as bigger datasets, multi-model ROCm comparison, and testing multiple Chaukidar agents directly on AMD GPUs could not be completed.
 
-This should be documented in the slide deck as an infrastructure limitation, while still showing the completed AMD ROCm/vLLM batch run as the required compute evidence.
-
-## Evidence To Include In Submission
-
-- `rocm-smi` screenshot
-- PyTorch HIP/GPU screenshot
-- vLLM model load logs
-- 48-prompt batch output log note; exact screenshot unavailable due to AMD notebook loading issue
-- exported AMD JSON result file
-- imported AMD report inside Chaukidar
+The completed ROCm/vLLM runs, exported JSON files, imported Chaukidar reports, and screenshots in `docs/amd-evidence.md` remain the AMD compute evidence for the project.

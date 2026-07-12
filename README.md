@@ -29,15 +29,6 @@ Chaukidar was built to test that hypothesis in a practical way: run the same saf
 
 Track 3 asks for an original AI application that demonstrates AMD compute usage. Chaukidar fits Track 3 because it is not just a wrapper around an API; it is a safety audit workflow that uses AMD-provided compute for batched model inference, then turns those results into a usable product layer for comparison, reporting, and future evaluation.
 
-Required Track 3 submission artifacts:
-
-- GitHub repository URL
-- Demo video
-- Slide deck PDF
-- Live demo / hosted URL recommended
-
-No Docker image is required for Track 3.
-
 ## AMD Compute Usage
 
 The AMD compute path is intentionally notebook-first because the hackathon provided a GPU-powered AMD Jupyter environment rather than a stable public inference endpoint.
@@ -90,15 +81,13 @@ examples/amd_audit_results_sample.json
 
 Near the end of the project, the AMD Dev Cloud notebook became unreliable and got stuck around **90% while loading the notebook**. Because of that, we could not complete additional AMD notebook experiments such as larger multi-model ROCm runs, heavier dataset sweeps, or testing multiple Chaukidar agents directly on AMD GPUs before submission.
 
-This should be shown honestly in the slide deck/demo as an infrastructure limitation. The important part is that we had already completed a successful AMD ROCm/vLLM batched inference run and imported those results into Chaukidar.
-
-Screenshot evidence is documented in `docs/amd-evidence.md`.
+The completed AMD ROCm/vLLM batched inference run remains documented in the repository and was imported into Chaukidar for reporting. Screenshot evidence is documented in `docs/amd-evidence.md`.
 
 ## Fireworks Usage
 
 Fireworks is used for broader hosted model comparison and for the primary LLM judge. This lets Chaukidar compare multiple stronger models while AMD compute remains the required Track 3 compute proof path.
 
-AMD imports can be stored as-is or re-judged by the backend judge during import. Re-judging is recommended when the notebook JSON only contains raw model responses or when you want consistent multilingual scoring across AMD and Fireworks runs. Future AMD notebook exports should include `prompt_text` so the judge has full context.
+AMD imports can be stored as-is or re-judged by the backend judge during import. Re-judging gives consistent multilingual scoring across AMD and Fireworks runs, especially when notebook JSON includes the original `prompt_text`.
 
 Typical Fireworks usage:
 
@@ -191,7 +180,7 @@ JUDGE_MODEL=accounts/fireworks/models/gpt-oss-120b
 JUDGE_TIMEOUT_SECONDS=45
 ```
 
-Frontend `.env.local` should point to the backend according to your local setup.
+Frontend `.env.local` points to the backend in local development.
 
 ## Custom Dataset Upload
 
@@ -264,29 +253,10 @@ POST /api/audits/import
 - The AMD run currently proves batched ROCm/vLLM inference on one model; larger multi-model AMD comparisons are future work.
 - We planned to run heavier dataset sweeps and test multiple Chaukidar agents directly on AMD GPUs, but the notebook loading issue prevented that before submission.
 - Custom DOCX dataset upload is not the main path yet; JSON upload is the safer validated path.
-- The judge should be calibrated further with human-reviewed labels.
+- Judge calibration with human-reviewed labels remains future work.
 - More balanced datasets per language/category would improve statistical confidence.
 - A persistent AMD-hosted endpoint would make live AMD inference possible, but the hackathon notebook setup was better suited to offline JSON export/import.
 
 ## Safety Note
 
-This repository should not commit sensitive datasets, API keys, raw private audit outputs, DB files, or `.env` files. Runtime custom datasets are user-provided and stored locally for audit execution.
-
-## Submission Checklist
-
-Before final submission, make sure the repo/deck/video clearly show:
-
-- AMD ROCm/vLLM notebook screenshots
-- `rocm-smi`, PyTorch HIP, and vLLM evidence
-- 48-prompt AMD batch result and imported JSON report
-- Fireworks multi-model comparison results
-- custom dataset upload flow
-- grouped audit report flow
-- slide deck PDF
-- demo video
-- GitHub URL
-- optional live demo URL
-
-## Pitch
-
-English-only AI safety is not enough. Companies deploying LLMs in South Asia need to know whether their systems remain safe in Urdu, Punjabi, Pashto, and Sindhi. Chaukidar compares English, translation-based, and native culturally adapted red-team prompts, runs scalable audits using AMD compute, and generates model-level risk reports that help teams find multilingual safety failures before users do.
+Sensitive datasets, API keys, raw private audit outputs, DB files, and `.env` files are excluded from version control. Runtime custom datasets are user-provided and stored locally for audit execution.
