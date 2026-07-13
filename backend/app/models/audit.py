@@ -28,7 +28,7 @@ class AuditResult(Base):
     __tablename__ = "audit_results"
 
     id = Column(Integer, primary_key=True)
-    audit_run_id = Column(Integer, ForeignKey("audit_runs.id"), nullable=False)
+    audit_run_id = Column(Integer, ForeignKey("audit_runs.id", ondelete="CASCADE"), nullable=False)
     prompt_id = Column(Integer, ForeignKey("prompts.id"), nullable=False)
     raw_response_text = Column(Text, nullable=False)
     label = Column(String(60), nullable=False)

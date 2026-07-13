@@ -10,6 +10,7 @@ from app.database import Base, SessionLocal, engine
 from app.agents.audit_runner import run_audit
 from app.models.audit import AuditResult, AuditRun
 from app.models.prompt import HarmCategory, Prompt
+from app.models.report import Report
 from app.models.target import TargetModel
 from app.routers import audits, datasets, reports, targets
 from app.routers.targets import sync_fireworks_models_from_env
@@ -27,6 +28,39 @@ def ensure_runtime_schema() -> None:
 
 
 ensure_runtime_schema()
+
+
+def ensure_postgres_delete_cascade() -> None:
+    if engine.dialect.name != "postgresql":
+        return
+    with engine.begin() as connection:
+        connection.execute(text("""
+        DO $$
+        BEGIN
+            IF EXISTS (
+                SELECT 1 FROM pg_constraint
+                WHERE conname = 'audit_results_audit_run_id_fkey'
+            ) THEN
+                ALTER TABLE audit_results DROP CONSTRAINT audit_results_audit_run_id_fkey;
+            END IF;
+            ALTER TABLE audit_results
+                ADD CONSTRAINT audit_results_audit_run_id_fkey
+                FOREIGN KEY (audit_run_id) REFERENCES audit_runs(id) ON DELETE CASCADE;
+
+            IF EXISTS (
+                SELECT 1 FROM pg_constraint
+                WHERE conname = 'reports_audit_run_id_fkey'
+            ) THEN
+                ALTER TABLE reports DROP CONSTRAINT reports_audit_run_id_fkey;
+            END IF;
+            ALTER TABLE reports
+                ADD CONSTRAINT reports_audit_run_id_fkey
+                FOREIGN KEY (audit_run_id) REFERENCES audit_runs(id) ON DELETE CASCADE;
+        END $$;
+        """))
+
+
+ensure_postgres_delete_cascade()
 
 
 def seed_database_if_empty() -> int:
@@ -55,6 +89,7 @@ def create_startup_demo_audits() -> list[int]:
         ]
         if existing_resume_ids:
             db.query(AuditResult).filter(AuditResult.audit_run_id.in_(existing_resume_ids)).delete(synchronize_session=False)
+            db.query(Report).filter(Report.audit_run_id.in_(existing_resume_ids)).delete(synchronize_session=False)
             db.query(AuditRun).filter(AuditRun.id.in_(existing_resume_ids)).update(
                 {
                     AuditRun.status: "pending",

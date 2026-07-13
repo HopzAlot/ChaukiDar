@@ -2,12 +2,12 @@
 
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, Activity, BarChart3, FileText, RotateCcw } from 'lucide-react';
+import { ArrowLeft, Activity, BarChart3, FileText, RotateCcw, Trash2 } from 'lucide-react';
 import { useParams } from 'next/navigation';
 import Navbar from '@/components/layout/Navbar';
 import Badge from '@/components/shared/Badge';
 import LoadingSpinner from '@/components/shared/LoadingSpinner';
-import { listAuditRuns, startAuditRun } from '@/lib/api';
+import { deleteAuditRun, listAuditRuns, startAuditRun } from '@/lib/api';
 import { useAsyncResource } from '@/hooks/useAsyncResource';
 import { formatDateTime } from '@/lib/datetime';
 import { displayModelName } from '@/lib/model-label';
@@ -39,6 +39,7 @@ export default function AuditGroupPage() {
   const [auditsOverride, setAuditsOverride] = useState<AuditRun[] | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [retryingIds, setRetryingIds] = useState<number[]>([]);
+  const [deletingIds, setDeletingIds] = useState<number[]>([]);
   const audits = auditsOverride ?? loadedAudits;
   const error = actionError ?? loadError;
 
@@ -65,6 +66,23 @@ export default function AuditGroupPage() {
       setActionError(reason instanceof Error ? reason.message : 'Unable to retry audit run.');
     } finally {
       setRetryingIds((ids) => ids.filter((id) => id !== auditId));
+    }
+  }
+
+  async function handleDelete(audit: AuditRun) {
+    if (audit.status === 'running') return;
+    const confirmed = window.confirm(`Delete ${modelLabel(audit)} and its results/report?`);
+    if (!confirmed) return;
+
+    setDeletingIds((ids) => [...ids, audit.id]);
+    setActionError(null);
+    try {
+      await deleteAuditRun(audit.id);
+      setAuditsOverride((current) => (current ?? audits)?.filter((item) => item.id !== audit.id) ?? current);
+    } catch (reason) {
+      setActionError(reason instanceof Error ? reason.message : 'Unable to delete audit run.');
+    } finally {
+      setDeletingIds((ids) => ids.filter((id) => id !== audit.id));
     }
   }
 
@@ -124,6 +142,14 @@ export default function AuditGroupPage() {
                   <Link href={`/audits/${audit.id}/report`} className="inline-flex items-center gap-2 rounded-sm bg-brand px-3 py-2 text-sm font-medium text-white transition hover:bg-brand-soft">
                     <FileText size={14} /> Report
                   </Link>
+                  <button
+                    type="button"
+                    onClick={() => handleDelete(audit)}
+                    disabled={audit.status === 'running' || deletingIds.includes(audit.id)}
+                    className="inline-flex items-center gap-2 rounded-sm border border-risk-high/30 px-3 py-2 text-sm font-medium text-risk-high transition hover:bg-risk-high-tint disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    <Trash2 size={14} /> {deletingIds.includes(audit.id) ? 'Deleting...' : 'Delete'}
+                  </button>
                 </div>
               </div>
             </div>

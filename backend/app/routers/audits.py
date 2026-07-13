@@ -8,6 +8,7 @@ from app.database import SessionLocal, get_db
 from app.importer import import_audit_payload
 from app.models.audit import AuditResult, AuditRun
 from app.models.prompt import HarmCategory, Prompt
+from app.models.report import Report
 from app.models.target import TargetModel
 from app.schemas.audit import AuditResultRead, AuditRunCreate, AuditRunRead
 from app.schemas.imported_audit import ImportedAuditPayload
@@ -131,6 +132,7 @@ def start_audit(audit_id: int, background_tasks: BackgroundTasks, db: Session = 
         raise HTTPException(status_code=409, detail="Audit is already running")
     if audit.status == "failed":
         db.query(AuditResult).filter(AuditResult.audit_run_id == audit_id).delete()
+        db.query(Report).filter(Report.audit_run_id == audit_id).delete()
         audit.status = "pending"
         audit.progress_current = 0
         audit.progress_total = 0
@@ -139,6 +141,21 @@ def start_audit(audit_id: int, background_tasks: BackgroundTasks, db: Session = 
         db.commit()
     background_tasks.add_task(run_audit_task, audit_id)
     return {"status": "started", "audit_id": audit_id}
+
+
+@router.delete("/{audit_id}")
+def delete_audit(audit_id: int, db: Session = Depends(get_db)):
+    audit = db.get(AuditRun, audit_id)
+    if audit is None:
+        raise HTTPException(status_code=404, detail="Audit not found")
+    if audit.status == "running":
+        raise HTTPException(status_code=409, detail="Cannot delete a running audit")
+
+    db.query(AuditResult).filter(AuditResult.audit_run_id == audit_id).delete(synchronize_session=False)
+    db.query(Report).filter(Report.audit_run_id == audit_id).delete(synchronize_session=False)
+    db.delete(audit)
+    db.commit()
+    return {"status": "deleted", "audit_id": audit_id}
 
 
 @router.get("/{audit_id}", response_model=AuditRunRead)

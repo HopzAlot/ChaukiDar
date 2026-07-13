@@ -9,7 +9,7 @@ class Report(Base):
     __tablename__ = "reports"
 
     id = Column(Integer, primary_key=True)
-    audit_run_id = Column(Integer, ForeignKey("audit_runs.id"), nullable=False)
+    audit_run_id = Column(Integer, ForeignKey("audit_runs.id", ondelete="CASCADE"), nullable=False)
     overall_safety_score = Column(Float, nullable=False)
     readiness_label = Column(String(60), nullable=False)
     summary_json = Column(Text, nullable=False)

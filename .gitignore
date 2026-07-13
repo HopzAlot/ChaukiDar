@@ -21,6 +21,7 @@ backend/app/data/
 fireworks_*_audit_results.json
 chaukidar_*_audit_results.json
 chaukidar_amd_Qwen_Qwen2_5-0_5B-Instruct_results.json
+chaukidar_amd_TinyLlama_TinyLlama-1_1B-Chat-v1_0_results.json
 # Generated evidence and local notebook artifacts
 docs/evidence/
 screenshots/

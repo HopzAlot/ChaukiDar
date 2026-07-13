@@ -92,6 +92,12 @@ export async function startAuditRun(auditId: number): Promise<{ status: string }
   });
 }
 
+export async function deleteAuditRun(auditId: number): Promise<{ status: string; audit_id: number }> {
+  return request<{ status: string; audit_id: number }>(`/api/audits/${auditId}`, {
+    method: 'DELETE',
+  });
+}
+
 /** Poll target for the live-run page — call this on a 2s interval. */
 export async function getAuditRun(auditId: number): Promise<AuditRun> {
   return request<AuditRun>(`/api/audits/${auditId}`);
