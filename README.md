@@ -52,42 +52,40 @@ This means we did **not** need a notebook API endpoint. The AMD notebook was the
 
 ### AMD Evidence We Collected
 
-During the AMD notebook run, we verified:
+During the AMD notebook runs, we verified:
 
 - AMD GPU availability through `rocm-smi`
-- PyTorch HIP availability
-- `torch` running with HIP/ROCm
-- `vLLM` available in the AMD environment
-- `Qwen/Qwen2.5-0.5B-Instruct` loaded through vLLM
-- batched inference over native multilingual prompts
+- PyTorch `2.9.1+gitff65f5b` with HIP/ROCm `7.2.53211-e1a6bc5663`
+- GPU availability from PyTorch
+- `vLLM` `0.16.1.dev0+g89a77b108.d20260318` in the AMD environment
+- full dataset loading from the Chaukidar JSON dataset
+- batched ROCm/vLLM inference over all 180 prompts
+- JSON export for Chaukidar import and re-judging
 
-The strongest AMD run processed:
+The strongest AMD runs processed the full dataset:
 
-- **Model:** `Qwen/Qwen2.5-0.5B-Instruct`
-- **Platform:** AMD Hackathon Jupyter instance, ROCm + vLLM
-- **Prompt count:** 48 native-adapted prompts
-- **Languages:** Urdu, Punjabi, Pashto, Sindhi
+| Model | Prompt Count | Runtime | Avg Latency | Throughput |
+| --- | ---: | ---: | ---: | ---: |
+| `Qwen/Qwen2.5-0.5B-Instruct` | 180 | 2.15 sec | 12 ms | 83.73 prompts/sec |
+| `TinyLlama/TinyLlama-1.1B-Chat-v1.0` | 180 | 4.16 sec | 23 ms | 43.25 prompts/sec |
+
+Dataset coverage for these AMD runs:
+
+- **Languages:** English, Urdu, Punjabi, Pashto, Sindhi
+- **Tracks:** English seed, translation baseline, native-adapted
 - **Categories:** cyber abuse, fraud and scams, hate and harassment, self-harm content, violent wrongdoing
-- **Runtime:** about 1.05 seconds for the 48-prompt batch
-- **Observed throughput:** about 46 prompts/sec
-- **Average latency:** about 21 ms per prompt by notebook measurement
-- **Screenshot status:** the 48-prompt batch screenshot is unavailable because the AMD notebook later became stuck around 90% loading; this result is documented from the notebook output log captured during the run.
+- **Platform:** AMD Hackathon Jupyter notebook, ROCm + vLLM
 
-AMD result files currently included locally:
+AMD evidence files included in the repository:
 
 ```text
 amd_notebooks/chaukidar_amd_audit.ipynb
+docs/amd-evidence.md
 benchmarks.md
-amd_rocm_qwen_native_audit_results.json
-chaukidar_amd_audit_results.json
 examples/amd_audit_results_sample.json
 ```
 
-### AMD Dev Cloud Issue
-
-Near the end of the project, the AMD Dev Cloud notebook became unreliable and got stuck around **90% while loading the notebook**. Because of that, we could not complete additional AMD notebook experiments such as larger multi-model ROCm runs, heavier dataset sweeps, or testing multiple Chaukidar agents directly on AMD GPUs before submission.
-
-The completed AMD ROCm/vLLM batched inference run remains documented in the repository and was imported into Chaukidar for reporting. Screenshot evidence is available in the `docs/` folder and cataloged in `docs/amd-evidence.md`.
+Screenshot evidence is available in `docs/amd-evidence/` and cataloged in `docs/amd-evidence.md`.
 
 ## Fireworks Usage
 
@@ -271,13 +269,11 @@ POST /api/audits/import
 
 ## Known Limitations
 
-- AMD Dev Cloud notebook reliability blocked extra final experiments.
-- The AMD run currently proves batched ROCm/vLLM inference on one model; larger multi-model AMD comparisons are future work.
-- We planned to run heavier dataset sweeps and test multiple Chaukidar agents directly on AMD GPUs, but the notebook loading issue prevented that before submission.
 - Custom DOCX dataset upload is not the main path yet; JSON upload is the safer validated path.
 - Judge calibration with human-reviewed labels remains future work.
 - More balanced datasets per language/category would improve statistical confidence.
-- A persistent AMD-hosted endpoint would make live AMD inference possible, but the hackathon notebook setup was better suited to offline JSON export/import.
+- A persistent AMD-hosted vLLM endpoint would make live AMD inference possible; for this hackathon, the AMD notebook was used as the batch compute environment and Chaukidar imported the generated JSON results.
+- The AMD benchmark covers two small open-source models on a single AMD notebook GPU; larger models, quantization sweeps, and multi-GPU experiments remain future work.
 
 ## Safety Note
 
